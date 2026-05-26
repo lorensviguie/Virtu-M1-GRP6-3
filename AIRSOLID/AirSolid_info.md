@@ -35,12 +35,18 @@
 - Charte implicite : *« Plus jamais 48 h sans ERP »*.
 - Partenaire logistique à venir : besoin futur d'un **flux EDI** sécurisé.
 
-scalabilité ? ( pour les bureaux ) 
-question sur l'entrepot, ou ? quel équipement nécessaire ? 
-avis sur le cloud côté client ? français ou pas ?
+combien de bureau ? 
+potentiel recrutement d'un responsable IT ?  
+scalabilité ? 
+question sur l'entrepot, ou ? quel équipement nécessaire ? quel utilité ?
+avis favorable sur le cloud côté ? français ou pas ( souveraineté ) ?
+si oui au cloud, se poser le question de garder une infra physique ? 
 et en barre metal qu'est ce que vous avez comme infrastructure ( Stockage ??,)
 dimensions des baies ? watage dispo ? alimentation triphasé ? 
 process sécurité RGPD ? 
 réseau ? fibre ? 
-budjet déjà défini pour l'infra,   annuel pour du cloud ? 
+budjet déjà défini pour l'infra, annuel pour du cloud ? 
 VPN ?
+côté wifi est ce qu'il y a un séparation entre les bureau et l'entrepot ? 
+quel type de données ? plutot sensible ou non ? 
+
