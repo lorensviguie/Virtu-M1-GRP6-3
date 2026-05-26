@@ -35,7 +35,7 @@
 - Charte implicite : *« Plus jamais 48 h sans ERP »*.
 - Partenaire logistique à venir : besoin futur d'un **flux EDI** sécurisé.
 
-svalabilité ? ( pour les bureaux ) 
+scalabilité ? ( pour les bureaux ) 
 question sur l'entrepot, ou ? quel équipement nécessaire ? 
 avis sur le cloud côté client ? français ou pas ?
 et en barre metal qu'est ce que vous avez comme infrastructure ( Stockage ??,)
