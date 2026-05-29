@@ -49,4 +49,3 @@ budjet déjà défini pour l'infra, annuel pour du cloud ?
 VPN ?
 côté wifi est ce qu'il y a un séparation entre les bureau et l'entrepot ? 
 quel type de données ? plutot sensible ou non ? 
-
