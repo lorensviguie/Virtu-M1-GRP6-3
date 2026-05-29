@@ -1,10 +1,10 @@
-# Architecture Proposée.*
+# Architecture.
 
 voici l'architecture de l'infra actuel de airsolid.
 
 ![alt text](./assets/archi_actuel.png)
 
-# Archi on prem proposée :
+## Archi on prem proposée :
 
 ![alt text](./assets/archi_onprem.png)
 
@@ -18,12 +18,16 @@ archi on prem :
 pour le budjet on a pris : 
 
 serveur hp 10eme gen avec 128go de ram et 50to de stockage. 
-~ 6 000 à 20 000 €/ 5 ans avec maintenance et coût de l'elec.
+
+4 000 à 10 000 € achat d'un serveur 
+Maintenance / pannes / disques : ~300–1 000 €/an
+
+
 
 On serait sur une proposition de passif/actif avec celui de l'entrepot 2 qui servirait de passif si l'actif tombe. 
 temps de reprise en HA attendu a 30sec / 5 mins
 
-# archi hybride physique/cloud ha
+## archi hybride physique/cloud ha
 
 ![alt text](./assets/archi_hybride.png)
 
@@ -33,21 +37,39 @@ archi hybride :
 
 même server que pour la solution onprem
 
-cloud en mode filet de sécu. sauvegarde quotidiennes des données grâce au object storage.
-pannes courte, électricité / reboot serveur pas de reprise d'activité sur le cloud. 
+Côté cloud : 
 
-panne disque / serveur HS, bascule partielle :
+A. Site miroir (HA simple) :
 
-- AD cloud prend relais immédiatement
-- VPN bascule cloud
-- ERP redémarre sur VM cloud
-- fichiers restaurés depuis sync récente
+copie du site interne
+hébergée sur 1–2 VM cloud
+ - si ton serveur tombe :
+site continue en cloud
+ - 1 à 10 minutes de bascule
 
-catastrophe totale (serveur mort),  cloud devient production :
+B. Active Directory secondaire
+1 contrôleur AD dans le cloud
+réplication automatique
+si serveur HS :
+authentification continue
 
--VM cloud “cold standby” activée
--restauration des dernières données
--DNS bascule
+C. VPN de secours
+instance VPN cloud (WireGuard / OpenVPN / Azure VPN)
+activation automatique ou manuelle rapide
+
+D. Sauvegardes des données
+
+backup complet + incrémental
+stockage object storage (OVH / S3 / équivalent)
+versioning + historique
+10–50 To en backup
+pas en usage actif
+
+E. ERP
+
+réplication quasi temps réel de l’ERP
+serveur principal = actif
+cloud = miroir chaud (warm standby)
 
 ### Coût
 
@@ -62,6 +84,23 @@ VM standby : 50–300 €/mois
 AD + VPN cloud : 50–150 €/mois
 stockage 50 To backup : 500–1 200 €/mois
 
-total = 600-1600€/mois
+total = 600-1600€/mois et 7200-19200€/5ans 
 
 ( si panne totale = plus cher )
+
+
+### Conclusion 
+
+👉 Le cloud est :
+
+✔ flexible
+✔ scalable
+✔ sans maintenance
+❌ très cher pour 50 To constants
+
+👉 Le serveur HP est :
+
+✔ énormément moins cher à long terme
+✔ parfait pour charge stable
+❌ moins flexible
+❌ maintenance à gérer
