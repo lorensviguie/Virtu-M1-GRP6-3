@@ -39,7 +39,7 @@ AirSolid est une entreprise avec des profils utilisateurs variés et une forte c
 | ----------------- | ----------------------------------------------------------------------------------- |
 | ERP               | Logiciel interne, **tourne sous Docker** — pas de contrainte technique particulière |
 | Site web          | WordPress, développé en interne                                                     |
-| Téléphonie        | Sans fil (à préciser : DECT, VoIP ?)                                                |
+| Téléphonie        | Sans fil                                                                            |
 | Vidéosurveillance | Système de caméras en place                                                         |
 | Licences Windows  | KMS envisagé mais non déployé                                                       |
 | Messagerie / AD   | Non précisés — **à investiguer**                                                    |
@@ -94,18 +94,5 @@ Le nouvel entrepôt représente une opportunité stratégique :
 | 🟡 P3   | Migration / amélioration accès distant nomades (ZTNA)  | Expérience commerciaux + sécurité     | 4–8 mois  |
 | 🟡 P3   | Audit & externalisation site WordPress                 | Réduction surface d'attaque           | 4–6 mois  |
 | 🟡 P3   | Unification téléphonie (VoIP)                          | Réduction coûts, mobilité             | 6–12 mois |
-
----
-
-## 9. Points ouverts à clarifier
-
-- [ ] Inventaire précis du serveur physique (RAM, CPU, stockage, OS)
-- [ ] Contenu et volumétrie des données sur le NAS
-- [ ] Nature des coupures internet : opérateur, équipement réseau ?
-- [ ] Connectivité fibre disponible sur le site entrepôt
-- [ ] Alimentation électrique de l'entrepôt (capacité salle serveur)
-- [ ] Logiciel de téléphonie actuel (DECT, VoIP, opérateur ?)
-- [ ] Résultats de l'enquête de satisfaction VPN commerciaux
-- [ ] Données personnelles traitées (périmètre RGPD à définir)
 
 ---

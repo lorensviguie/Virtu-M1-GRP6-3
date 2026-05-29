@@ -14,7 +14,7 @@ Le client est ouvert aux deux options.
 - Durée de rétention à définir selon les typologies de données
 
 ### Haute disponibilité & continuité
-- Redondance internet : ajout d'un **lien de secours** (4G/5G ou second opérateur)
+- Redondance internet : ajout d'un **lien de secours** (4G/5G ou second opérateur) ( à voir )
 - Architecture HA entre site principal et entrepôt
 - Plan de reprise d'activité (PRA) à formaliser
 
@@ -31,7 +31,7 @@ Le client est ouvert aux deux options.
 - **KMS** : déploiement pour centraliser la gestion des licences Windows
 - **Téléphonie** : migration vers solution VoIP unifiée (Teams, 3CX…) recommandée
 - **Vidéosurveillance** : vérifier compatibilité et accès distant sécurisé (entrepôt)
-- **Site WordPress** : audit sécurité, hébergement externalisé recommandé
+- **Site WordPress** :c hébergement externalisé recommandé
 
 ### Coûts estimatifs annuels (base ~80 utilisateurs)
 
