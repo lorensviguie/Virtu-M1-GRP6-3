@@ -96,3 +96,8 @@ Le nouvel entrepôt représente une opportunité stratégique :
 | 🟡 P3   | Unification téléphonie (VoIP)                          | Réduction coûts, mobilité             | 6–12 mois |
 
 ---
+
+
+
+
+
