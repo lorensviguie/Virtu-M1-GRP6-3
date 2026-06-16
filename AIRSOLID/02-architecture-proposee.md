@@ -65,7 +65,7 @@ versioning + historique
 10–50 To en backup
 pas en usage actif
 
-E. ERP
+E. ERP ( access, microsoft 365)
 
 réplication quasi temps réel de l’ERP
 serveur principal = actif

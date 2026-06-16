@@ -9,7 +9,7 @@
 **Contexte AIRSOLID :** Le serveur physique de 2012 est en fin de vie et constitue un SPOF. Il est remplacé par un cluster Proxmox VE à deux nœuds (site principal + entrepôt).
 
 **Ce que nous devons expliquer :**
-- Proxmox VE est un hyperviseur de **type 1** (bare-metal) basé sur KVM + LXC, installé directement sur le matériel sans OS hôte intermédiaire.
+- Proxmox VE est un hyperviseur de **type 1** (bare-metal) basé sur KVM + LXC, installé directement sur le matériel.
 - Il permet de mutualiser les ressources physiques en plusieurs VMs isolées : AD, ERP Docker, fichiers, PBS, VPN, supervision, KMS.
 - La fonctionnalité **Proxmox HA Cluster** permet de faire migrer ou redémarrer automatiquement une VM sur un nœud sain en cas de panne d'un nœud — directement applicable à la contrainte *"Plus jamais 48h sans ERP"*.
 - **Pourquoi Proxmox :** open source (pas de coût de licence hyperviseur), cluster HA natif, intégration PBS, interface web complète, adapté à une infrastructure sans IT interne.
@@ -68,8 +68,7 @@
 **Ce que nous devons expliquer :**
 - **Règle 3-2-1 appliquée :**
   - Copie 1 : sauvegarde nightly des VMs via Proxmox Backup Server (site principal)
-  - Copie 2 : réplication horaire Proxmox vers le nœud entrepôt (inter-sites)
-  - Copie 3 : export hebdomadaire chiffré (AES-256) vers OVH Object Storage (offsite)
+  - Copie 2 : export hebdomadaire chiffré (AES-256) vers OVH Object Storage (offsite)
 - **Conformité RGPD :** registre des traitements, chiffrement obligatoire, DPA avec les sous-traitants, durées de rétention définies par type de donnée.
 - **RTO cible ERP : < 2h** — en cas de panne du nœud principal, Proxmox HA redémarre `vm-erp` sur le nœud entrepôt automatiquement (RTO quasi nul si HA actif).
 - **RPO cible : < 1h** — grâce à la réplication inter-sites toutes les heures.
@@ -101,7 +100,6 @@
 - **Résilience Windows appliquée à AIRSOLID :**
   - Le **Windows Server Failover Cluster (WSFC)** d'Hyper-V permet la migration automatique de VMs entre hôtes physiques — c'est le pendant Microsoft de Proxmox HA Cluster.
   - Le **contrôleur de domaine secondaire** (à ajouter sur le nœud entrepôt) est une bonne pratique issue de l'atelier résilience : un seul DC = SPOF sur l'annuaire.
-  - La notion de **quorum** (nœud témoin pour éviter le split-brain dans un cluster à 2 nœuds) est identique entre Hyper-V et Proxmox — le VPS witness cloud joue ce rôle ici.
 - **Lien atelier :** les mécanismes de bascule automatique étudiés en atelier Hyper-V (live migration, VM failover) se retrouvent dans Proxmox HA — même objectif de résilience, même concept de cluster, deux implémentations différentes.
 
 ---
