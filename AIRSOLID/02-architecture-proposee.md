@@ -19,8 +19,10 @@ pour le budjet on a pris :
 
 serveur hp 10eme gen avec 128go de ram et 50to de stockage. 
 
-4 000 à 10 000 € achat d'un serveur 
+4 000–10 000 € achat d'un serveur 
 Maintenance / pannes / disques : ~300–1 000 €/an
+
+soit, pour les 2 serveurs (site principal + entrepôt) : 8 000–20 000 € d'achat, 600–2 000 €/an de maintenance
 
 
 
@@ -75,7 +77,7 @@ cloud = miroir chaud (warm standby)
 
 Serveur physique : 
 
-~ 6 000 à 20 000 €/ 5 ans avec maintenance et coût de l'elec.
+~6 000–20 000 €/5 ans avec maintenance et coût de l'elec.
 
 
 Cloud minimal HA/hybride :
@@ -84,7 +86,7 @@ VM standby : 50–300 €/mois
 AD + VPN cloud : 50–150 €/mois
 stockage 50 To backup : 500–1 200 €/mois
 
-total = 600-1600€/mois et 7200-19200€/5ans 
+total = 600–1 650 €/mois soit 7 200–19 800 €/an (infra cloud seule : VM + AD/VPN + stockage — hors licences/MCO/connectivité déjà comptés dans le tableau comparatif ci-dessous)
 
 ( si panne totale = plus cher )
 
