@@ -104,3 +104,8 @@ total = 600-1600€/mois et 7200-19200€/5ans
 ✔ parfait pour charge stable
 ❌ moins flexible
 ❌ maintenance à gérer
+
+| Scénario        | Avantages                     | Inconvénients                   | Coût estimé / an |
+| --------------- | ----------------------------- | ------------------------------- | ---------------- |
+| Full on-premise | Maîtrise totale, CapEx        | Risque panne matérielle, MCO    | 20 000–39 000 €  |
+| Cloud hybride   | Résilience + maîtrise données | Coût récurrent OpEx             | 19 000–38 000 €  |
