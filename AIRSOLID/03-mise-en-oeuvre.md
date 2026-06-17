@@ -387,7 +387,7 @@ curl -fsSL [https://pkg.cloudflare.com/cloudflared-ascii.repo](https://pkg.cloud
 sudo dnf update -y && sudo dnf install cloudflared -y
 
 # 2. Enregistrement du démon système (Remplacer par le jeton généré sur la console Zero Trust)
-sudo cloudflared service install EYJuIjoiYmY2...[VOTRE_TOKEN]...
+sudo cloudflared service install EYJuIjoiYmY2...
 
 # 3. Activation du routage des paquets IP (IP Forwarding)
 sudo sysctl -w net.ipv4.ip_forward=1
@@ -404,7 +404,7 @@ sudo firewall-cmd --reload
 Afin de garantir une isolation applicative et de respecter les politiques de sécurité de l'infrastructure, tous les services Linux s'exécutent au sein du moteur de conteneurs rootless Podman via podman-compose.  
 
 ```
-┌───────────────────────────────┐
+                  ┌───────────────────────────────┐
                   │      Clients Distants (WARP)  │
                   └───────────────┬───────────────┘
                                   │ (Cloudflare Tunnel)
