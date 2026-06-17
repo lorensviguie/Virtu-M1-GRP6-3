@@ -1,4 +1,4 @@
-partenaire logistique : fkux edi a ouvrir et accès à cadré 
+partenaire logistique : flux edi a ouvrir et accès à cadré 
 
 faire un graphe pour les bugdet entre on prem et hybride 
 
