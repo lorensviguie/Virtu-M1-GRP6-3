@@ -376,6 +376,251 @@ nslookup -type=SRV _ldap._tcp.airsolid.local
 ```
 ---
 
+## infrastructure système de fichier. 
+
+## Informations générales
+
+| Paramètre               | Valeur              |
+| ----------------------- | ------------------- |
+| **Serveur de fichiers** | `SRV-TEST-AIRSOLID` |
+| **IP**                  | `10.1.248.11`       |
+| **Chemin racine**       | `C:\Partages`       |
+| **Domaine**             | `airsolid.local`    |
+
+---
+
+## Architecture des partages
+
+```
+\\SRV-TEST-AIRSOL\
+    ├── Direction\       → GRP_Direction (RW) | GRP_Direction (RO sur autres)
+    ├── Informatique\    → GRP_Informatique (RW) | GRP_Direction (RO)
+    ├── Comptabilite\    → GRP_Comptabilite (RW) | GRP_Direction (RO)
+    ├── Commercial\      → GRP_Commercial (RW) | GRP_Direction (RO)
+    ├── RH\              → GRP_RH (RW) | GRP_Direction (RO)
+    ├── Production\      → GRP_Production (RW) | GRP_Direction (RO)
+    └── Commun\          → Tous les départements (RW)
+```
+
+---
+
+## Matrice des droits d'accès
+
+| Dossier          | Direction | Informatique | Comptabilite | Commercial | RH  | Production |
+| ---------------- | --------- | ------------ | ------------ | ---------- | --- | ---------- |
+| **Direction**    | RW        | ❌           | ❌           | ❌         | ❌  | ❌         |
+| **Informatique** | RO        | RW           | ❌           | ❌         | ❌  | ❌         |
+| **Comptabilite** | RO        | ❌           | RW           | ❌         | ❌  | ❌         |
+| **Commercial**   | RO        | ❌           | ❌           | RW         | ❌  | ❌         |
+| **RH**           | RO        | ❌           | ❌           | ❌         | RW  | ❌         |
+| **Production**   | RO        | ❌           | ❌           | ❌         | ❌  | RW         |
+| **Commun**       | RW        | RW           | RW           | RW         | RW  | RW         |
+
+---
+
+## ÉTAPE 1 — Installation du rôle Serveur de fichiers
+
+Sur **SRV-TEST-AIRSOLID** :
+
+```powershell
+Install-WindowsFeature -Name FS-FileServer -IncludeManagementTools
+```
+
+---
+
+## ÉTAPE 2 — Création de la structure de dossiers
+
+Sur **SRV-TEST-AIRSOLID** :
+
+```powershell
+New-Item -ItemType Directory -Path "C:\Partages" -Force
+
+$departements = @("Direction","Informatique","Comptabilite","Commercial","RH","Production","Commun")
+
+foreach ($dept in $departements) {
+    New-Item -ItemType Directory -Path "C:\Partages\$dept" -Force
+}
+```
+
+---
+
+## ÉTAPE 3 — Création des groupes AD
+
+Sur **DC1** :
+
+```powershell
+$groupsOU = "OU=Groupes,OU=AirSolid,DC=airsolid,DC=local"
+$departements = @("Direction","Informatique","Comptabilite","Commercial","RH","Production","Commun")
+
+foreach ($dept in $departements) {
+    New-ADGroup `
+        -Name "FS_${dept}_RW" `
+        -GroupScope Global `
+        -GroupCategory Security `
+        -Path $groupsOU `
+        -Description "Lecture/Ecriture - $dept"
+
+    New-ADGroup `
+        -Name "FS_${dept}_RO" `
+        -GroupScope Global `
+        -GroupCategory Security `
+        -Path $groupsOU `
+        -Description "Lecture seule - $dept"
+}
+```
+
+### Groupes créés
+
+| Groupe               | Droits           | Dossier      |
+| -------------------- | ---------------- | ------------ |
+| `FS_Direction_RW`    | Lecture/Ecriture | Direction    |
+| `FS_Direction_RO`    | Lecture seule    | Direction    |
+| `FS_Informatique_RW` | Lecture/Ecriture | Informatique |
+| `FS_Informatique_RO` | Lecture seule    | Informatique |
+| `FS_Comptabilite_RW` | Lecture/Ecriture | Comptabilite |
+| `FS_Comptabilite_RO` | Lecture seule    | Comptabilite |
+| `FS_Commercial_RW`   | Lecture/Ecriture | Commercial   |
+| `FS_Commercial_RO`   | Lecture seule    | Commercial   |
+| `FS_RH_RW`           | Lecture/Ecriture | RH           |
+| `FS_RH_RO`           | Lecture seule    | RH           |
+| `FS_Production_RW`   | Lecture/Ecriture | Production   |
+| `FS_Production_RO`   | Lecture seule    | Production   |
+| `FS_Commun_RW`       | Lecture/Ecriture | Commun       |
+| `FS_Commun_RO`       | Lecture seule    | Commun       |
+
+---
+
+## ÉTAPE 4 — Application des droits NTFS
+
+Sur **SRV-TEST-AIRSOLID** :
+
+```powershell
+$departements = @("Direction","Informatique","Comptabilite","Commercial","RH","Production","Commun")
+
+foreach ($dept in $departements) {
+    $path = "C:\Partages\$dept"
+    $acl = Get-Acl $path
+    $acl.SetAccessRuleProtection($true, $false)
+
+    $ruleRW = New-Object System.Security.AccessControl.FileSystemAccessRule(
+        "AIRSOLID\FS_${dept}_RW",
+        "Modify",
+        "ContainerInherit,ObjectInherit",
+        "None",
+        "Allow"
+    )
+
+    $ruleRO = New-Object System.Security.AccessControl.FileSystemAccessRule(
+        "AIRSOLID\FS_${dept}_RO",
+        "ReadAndExecute",
+        "ContainerInherit,ObjectInherit",
+        "None",
+        "Allow"
+    )
+
+    $ruleAdmin = New-Object System.Security.AccessControl.FileSystemAccessRule(
+        "AIRSOLID\Admins du domaine",
+        "FullControl",
+        "ContainerInherit,ObjectInherit",
+        "None",
+        "Allow"
+    )
+
+    $acl.AddAccessRule($ruleRW)
+    $acl.AddAccessRule($ruleRO)
+    $acl.AddAccessRule($ruleAdmin)
+    Set-Acl -Path $path -AclObject $acl
+}
+```
+
+---
+
+## ÉTAPE 5 — Création des partages réseau
+
+Sur **SRV-TEST-AIRSOLID** :
+
+```powershell
+$departements = @("Direction","Informatique","Comptabilite","Commercial","RH","Production","Commun")
+
+foreach ($dept in $departements) {
+    New-SmbShare `
+        -Name $dept `
+        -Path "C:\Partages\$dept" `
+        -FullAccess "AIRSOLID\Admins du domaine" `
+        -ChangeAccess "AIRSOLID\FS_${dept}_RW" `
+        -ReadAccess "AIRSOLID\FS_${dept}_RO" `
+        -Description "Partage $dept - AirSolid"
+}
+```
+
+---
+
+## ÉTAPE 6 — Attribution des groupes départements
+
+Sur **DC1** :
+
+```powershell
+# Direction en lecture seule sur tous les dossiers
+$departements = @("Informatique","Comptabilite","Commercial","RH","Production","Commun")
+foreach ($dept in $departements) {
+    Add-ADGroupMember -Identity "FS_${dept}_RO" -Members "GRP_Direction"
+}
+
+# Chaque département en écriture sur son dossier
+Add-ADGroupMember -Identity "FS_Direction_RW"     -Members "GRP_Direction"
+Add-ADGroupMember -Identity "FS_Informatique_RW"  -Members "GRP_Informatique"
+Add-ADGroupMember -Identity "FS_Comptabilite_RW"  -Members "GRP_Comptabilite"
+Add-ADGroupMember -Identity "FS_Commercial_RW"    -Members "GRP_Commercial"
+Add-ADGroupMember -Identity "FS_RH_RW"            -Members "GRP_RH"
+Add-ADGroupMember -Identity "FS_Production_RW"    -Members "GRP_Production"
+
+# Commun accessible en écriture à tous
+$departements = @("Direction","Informatique","Comptabilite","Commercial","RH","Production")
+foreach ($dept in $departements) {
+    Add-ADGroupMember -Identity "FS_Commun_RW" -Members "GRP_$dept"
+}
+```
+
+---
+
+## Gestion des utilisateurs
+
+### Ajouter un utilisateur à un département
+
+```powershell
+# Exemple : ajouter jdupont au département Commercial
+Add-ADGroupMember -Identity "GRP_Commercial" -Members "jdupont"
+```
+
+### Donner accès en lecture seule à un dossier spécifique
+
+```powershell
+# Exemple : jdupont peut lire le dossier RH
+Add-ADGroupMember -Identity "FS_RH_RO" -Members "jdupont"
+```
+
+### Retirer l'accès à un utilisateur
+
+```powershell
+# Exemple : retirer jdupont du département Commercial
+Remove-ADGroupMember -Identity "GRP_Commercial" -Members "jdupont" -Confirm:$false
+```
+
+---
+
+## Accès depuis les postes clients
+
+Les utilisateurs accèdent aux partages via l'explorateur Windows :
+
+```
+\\SRV-TEST-AIRSOL\Commercial
+\\SRV-TEST-AIRSOL\Commun
+\\SRV-TEST-AIRSOL\Direction
+etc...
+```
+
+---
+
 ## Infrastructure Cloudflare Zero Trust / VPN Gateway.  
 
 Le serveur SRV-LNX-VPN-01 agit en tant que relais réseau exclusif. Il établit un tunnel chiffré sortant vers Cloudflare, permettant l'accès distant via le client WARP sans aucune ouverture de port sur le pare-feu périphérique (NAT/Box).  
@@ -554,4 +799,3 @@ rm -f $BACKUP_DIR/dump_$DATE.sql $BACKUP_DIR/db_encrypted_$DATE.enc
 
 ---
 
-*Document généré le 17/06/2026 — Infrastructure AirSolid*
