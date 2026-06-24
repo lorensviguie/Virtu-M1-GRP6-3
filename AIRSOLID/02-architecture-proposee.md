@@ -44,49 +44,68 @@ soit, pour les 2 serveurs (site principal + entrepôt) : 8 000–20 000 € d'ac
 On serait sur une proposition de passif/actif avec celui de l'entrepot 2 qui servirait de passif si l'actif tombe. 
 temps de reprise en HA attendu a 30sec / 5 mins
 
-## archi hybride physique/cloud ha
+## Répartitions et dimentionnement des vms :
 
-![alt text](./assets/archi_hybride.png)
+### Hyperviseur
 
-archi hybride : 
+Les deux serveurs HP tournent sous **Proxmox VE** (licence open-source, pas de coût par socket), avec réplication de VMs entre les deux nœuds via le module Proxmox HA.
 
-1 serveur physique dans la salle server existante. 
+---
 
-même server que pour la solution onprem
+### Serveur 1 — Principal (salle serveur existante)
 
-Côté cloud : 
+| VM                        | Rôle                                               | vCPU        | RAM       | Stockage   |
+| ------------------------- | -------------------------------------------------- | ----------- | --------- | ---------- |
+| VM-AD-01                  | Active Directory DC primaire (Windows Server 2022) | 4           | 8 Go      | 120 Go     |
+| VM-AD-02                  | AD DC secondaire / réplica (Windows Server 2022)   | 4           | 8 Go      | 120 Go     |
+| VM-ERP-01                 | Hôte Docker — ERP web applicatif + base de données | 8           | 32 Go     | 500 Go     |
+| VM-FILE-01                | Partages fichiers Windows (SMB)                    | 4           | 16 Go     | 10 To      |
+| VM-VPN-01                 | Serveur VPN (OpenVPN / WireGuard — 40 nomades)     | 2           | 4 Go      | 60 Go      |
+| VM-WEB-01                 | WordPress + reverse proxy (Nginx)                  | 4           | 8 Go      | 200 Go     |
+| VM-MON-01                 | Supervision et alertes (Zabbix / Grafana)          | 4           | 8 Go      | 200 Go     |
+| **Total alloué**          |                                                    | **30 vCPU** | **84 Go** | **~11 To** |
+| **Réserve hyperviseur**   | OS Proxmox + overcommit sécurisé                   | —           | 8 Go      | 100 Go     |
+| **Disponible (headroom)** | Extensions futures                                 | —           | **36 Go** | **~39 To** |
 
-A. Site miroir (HA simple) :
+> Les 39 To restants sont utilisés pour les **sauvegardes locales** (snapshots Proxmox Backup Server) et le stockage brut des données métier si les partages grandissent.
 
-copie du site interne
-hébergée sur 1–2 VM cloud
- - si ton serveur tombe :
-site continue en cloud
- - 1 à 10 minutes de bascule
+---
 
-B. Active Directory secondaire
-1 contrôleur AD dans le cloud
-réplication automatique
-si serveur HS :
-authentification continue
+### Serveur 2 — Passif / Failover (entrepôt en acquisition)
 
-C. VPN de secours
-instance VPN cloud (WireGuard / OpenVPN / Azure VPN)
-activation automatique ou manuelle rapide
+Le nœud passif héberge les réplicas des VMs critiques via la réplication Proxmox (RPO ≈ 15 min, RTO ≈ 30 s – 5 min selon la VM).
 
-D. Sauvegardes des données
+| VM               | Rôle                                               | vCPU        | RAM       | Stockage   |
+| ---------------- | -------------------------------------------------- | ----------- | --------- | ---------- |
+| VM-AD-01-R       | Réplica AD DC (bascule auto en cas de panne S1)    | 4           | 8 Go      | 120 Go     |
+| VM-ERP-01-R      | Réplica ERP Docker (bascule manuelle ou auto HA)   | 8           | 32 Go     | 500 Go     |
+| VM-FILE-01-R     | Réplica partages fichiers (DFS-R ou Proxmox repl.) | 4           | 16 Go     | 10 To      |
+| VM-VPN-01-R      | VPN de secours (actif/passif, même pool IP)        | 2           | 4 Go      | 60 Go      |
+| **Total alloué** |                                                    | **18 vCPU** | **60 Go** | **~11 To** |
+| **Disponible**   | Monitoring secondaire, tests, extensions           | —           | **60 Go** | **~39 To** |
 
-backup complet + incrémental
-stockage object storage (OVH / S3 / équivalent)
-versioning + historique
-10–50 To en backup
-pas en usage actif
+> VM-WEB-01 et VM-MON-01 ne sont pas répliquées en priorité : le site WordPress et la supervision sont considérés **non critiques** pour la continuité d'activité immédiate. Elles peuvent être ajoutées si le budget le permet.
 
-E. ERP ( access, microsoft 365)
+---
 
-réplication quasi temps réel de l’ERP
-serveur principal = actif
-cloud = miroir chaud (warm standby)
+### Récapitulatif global
+
+| Ressource            | Serveur 1 (alloué) | Serveur 2 (alloué) | Capacité totale (×2)                     |
+| -------------------- | ------------------ | ------------------ | ---------------------------------------- |
+| vCPU                 | 30                 | 18                 | 128 threads dispo (HP 10e gen ~64/serv.) |
+| RAM                  | 84 Go / 128 Go     | 60 Go / 128 Go     | 256 Go total                             |
+| Stockage VMs         | ~11 To / 50 To     | ~11 To / 50 To     | 100 To total                             |
+| Stockage backup/data | ~39 To             | ~39 To             | ~78 To disponibles                       |
+
+---
+
+### Politique de sauvegarde
+
+- **Proxmox Backup Server** installé sur chaque nœud : snapshots journaliers des VMs (rétention 7 jours)
+- **Réplication inter-nœuds** toutes les 15 min pour AD, ERP et fichiers
+- **Sauvegarde froide mensuelle** sur disque externe ou NAS dédié (règle 3-2-1)
+
+---
 
 ### Coût
 
@@ -108,13 +127,6 @@ total = 600–1 650 €/mois soit 7 200–19 800 €/an (infra cloud seule : VM 
 
 ### Conclusion 
 
-👉 Le cloud est :
-
-✔ flexible
-✔ scalable
-✔ sans maintenance
-❌ très cher pour 50 To constants
-
 👉 Le serveur HP est :
 
 ✔ énormément moins cher à long terme
@@ -122,7 +134,6 @@ total = 600–1 650 €/mois soit 7 200–19 800 €/an (infra cloud seule : VM 
 ❌ moins flexible
 ❌ maintenance à gérer
 
-| Scénario        | Avantages                     | Inconvénients                   | Coût estimé / an |
-| --------------- | ----------------------------- | ------------------------------- | ---------------- |
-| Full on-premise | Maîtrise totale, CapEx        | Risque panne matérielle, MCO    | 20 000–39 000 €  |
-| Cloud hybride   | Résilience + maîtrise données | Coût récurrent OpEx             | 19 000–38 000 €  |
+|                 | Avantages              | Inconvénients                | Coût estimé / an |
+| --------------- | ---------------------- | ---------------------------- | ---------------- |
+| Full on-premise | Maîtrise totale, CapEx | Risque panne matérielle, MCO | 20 000–39 000 €  |
